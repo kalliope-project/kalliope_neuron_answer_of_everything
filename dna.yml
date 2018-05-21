@@ -1,0 +1,10 @@
+name: "answer_of_everything"
+type: "neuron"
+author: "Kalliope project team"
+
+kalliope_supported_version:
+    - 0.5
+
+tags:
+    - "answers"
+    - "42"
