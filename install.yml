@@ -1,0 +1,11 @@
+- name: answer_of_everything
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  become: true
+  tasks:
+    - name: "Install pip dependencies"
+      pip:
+        name: wolframalpha
+      pip:
+        name: googletranslate
