@@ -2,8 +2,12 @@
 Get an answer to a question from multiple backend engine like Google, wolframalpha or DuckDuckGo
 
 ## Synopsis
-
 Ask a generell question. At the moment only Wolfram Alpha is supported.
+
+## Installation
+```bash
+kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_answer_of_everything.git
+```
 
 ## Example
 - Kalliope --> I have a question how tall is the eiffel tower 
