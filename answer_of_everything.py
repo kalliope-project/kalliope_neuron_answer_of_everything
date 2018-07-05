@@ -103,7 +103,7 @@ class Answer_of_everything(NeuronModule):
         if 'P.M.' in result:
             result = result.split('P.M.', 1)[0] + 'P.M.'
         if 'A.M.' in result:
-            result = result.index('A.M.', 1)[0] + 'A.M.'     
+            result = result.split('A.M.', 1)[0] + 'A.M.'     
         
         return result
         
