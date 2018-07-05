@@ -1,0 +1,10 @@
+- name: answer_of_everything
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  become: true
+  tasks:
+    - name: "google translate"
+      pip:
+        name: googletranslate
+        
