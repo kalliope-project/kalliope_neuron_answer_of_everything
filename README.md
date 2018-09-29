@@ -54,6 +54,7 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
     According to alpha: {{ AnswerFound }}
 {% elif NoAnswerFound %} 
     Didn’t found an answer to your question {{ NoAnswerFound }} 
+{% endif %}
 
  ```
 
