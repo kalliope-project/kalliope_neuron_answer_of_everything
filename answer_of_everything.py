@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 from kalliope.core.NeuronModule import NeuronModule, MissingParameterException
 from kalliope import Utils
-from googletranslate import translator
+from googletrans import Translator
 import requests
 
 class Answer_of_everything(NeuronModule):
@@ -16,6 +16,7 @@ class Answer_of_everything(NeuronModule):
         answer = None
         self.SR_ROOT = 'https://api.wolframalpha.com/v2/spoken'
         self.SA_ROOT = 'http://api.wolframalpha.com/v2/result'
+        self.translator = Translator()
         
         if self._is_parameters_ok():
             question = self.question
@@ -44,12 +45,12 @@ class Answer_of_everything(NeuronModule):
 
 
     def translate_question(self, text):
-        text = translator.translate(text, dest='en', src=self.translate).text
+        text = self.translator.translate(text, dest='en', src=self.translate).text
         Utils.print_info('Translated question to: %s' % text)
         return text
     
     def translate_answer(self, text):
-        text = translator.translate(text, dest=self.translate, src='en').text
+        text = self.translator.translate(text, dest=self.translate, src='en').text
         Utils.print_info('Translated answer to: %s' % text)
         return text    
     
