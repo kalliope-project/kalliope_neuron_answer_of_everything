@@ -6,5 +6,5 @@
   tasks:
     - name: "google translate"
       pip:
-        name: googletranslate
+        name: googletrans
         
