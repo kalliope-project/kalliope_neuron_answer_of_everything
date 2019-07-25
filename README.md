@@ -1,113 +1,111 @@
-# kalliope_neuron_answer_of_everything-
-Get an answer to a question from multiple backend engine like Google, wolframalpha or DuckDuckGo
-## Synopsis
+# answer-of-everything
 
-Currently in alpha stage and only for WolframAlpha search. 
+## Synopsis
+A search engines to ask all kind of questions, where you can set the priority of the different search engines. If the first engine does not find an answer, it will lookup the next engine.
+
+
+## Installation
+```bash
+kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_answer_of_everything.git
+```
 
 ## Example
-Kalliope --> Ask alpha how tall is the eiffel tower 
-Kalliope --> Ask alpha what time is it in Tokio
-Kalliope --> Ask alpha when albert einstein is born
-Kalliope --> Ask alpha how far is the moon from earth away
-
-## Options
-| parameter        | required | comments                                                  |
-|----------------|---------|----------------------------------------------|
-| question          | yes       |                                                                 |
-| key                 | yes       | https://products.wolframalpha.com/api/           |
-| translate         | no         | Google translator, default english no need to translate, e.g. "fr" , "de"|
-| option            | yes        | 'ShortAnswer', 'SpokenAnswer', 'FullResults', 'All' |
-| tell_me_more   | no         | If you have FullDetails you get 2 results, the answer and a definition, If tell_me_more is True you can ask a second time, to tell you more |
+- Kalliope --> I have a question how tall is the eiffel tower 
+- Kalliope --> Can you answer me what time is it in Tokio
+- Kalliope --> Tell me when albert einstein is born
+- Kalliope --> Can you tell me what day was March 31, 1989
 
 
+## Main options
+| parameter        | required | comments                                     |
+|------------------|----------|----------------------------------------------|
+| question         | yes      |                                              |
+| engines          | yes      | Define the search engines you want to use    |
+| translate        | no       | Wolfram Alpha and Duckduckgo only support English, [here](https://py-googletrans.readthedocs.io/en/latest/#googletrans-languages) you can find supported languages |
 
-## Synpase
+## Wolfram alpha engine
+| parameter        | required | comments                                     |
+|------------------|----------|----------------------------------------------|
+| wolfram_alpha    | yes      |                                              |
+| key              | yes      | https://products.wolframalpha.com/api/       |
+| unit             | no       | You can choose between metric (default) or imperial |
+| priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
+| option           | no       | You can chose between spoken_answer (default) or short_answer. With spoken_answer you get a full sentence back if available, otherwise it returns a short_answer| 
+
+
+## Google engine
+| parameter        | required | comments                                     |
+|------------------|----------|----------------------------------------------|
+| google           | yes      |                                              |
+| priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
+
+## Duckduckgo engine
+| parameter        | required | comments                                     |
+|------------------|----------|----------------------------------------------|
+| duckduckgo       | yes      |                                              |
+| priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
+
+## Returned values
+| name             | description                           | 
+|------------------|---------------------------------------|
+| wolfram_answer   | Answer found on wolfram alpha         |
+| google_answer    | Answer found on google                |
+| duckduckgo_answer| Answer found on duckduckgo            |
+| NoAnswerFound    | No Answer found, returns the question |
+
+
+## Synapse example for python 2
 ```
-  - name: "answer-of-everything-short"
+  
+  - name: "answer-of-everything"
     signals: 
-      - order: "ask alpha_short {{ query }}"
+      - order: "answer me the question {{ query }}"
     neurons:
       - answer_of_everything:
-          key: "XXXXXX-XXXXXXXXXX"
           question: "{{ query }}"
-          option: "ShortAnswer"
-          #translate: "de"
-          file_template: "templates/answers.j2"
+          language: "de"
+          engines:  
+                wolfram_alpha: 
+                    key: "XXXX-XXXXXXXX"
+                    priority: 1
+                google:
+                    priority: 2
+                duckduckgo:
+                    priority: 3
+          file_template: "templates/answer_of_everything.j2" 
 
-  - name: "answer-of-everything-spoken"
+```
+## Synapse example for python 3
+```
+  
+  - name: "answer-of-everything"
     signals: 
-      - order: "ask alpha_spoken {{ query }}"
+      - order: "answer me the question {{ query }}"
     neurons:
       - answer_of_everything:
-          key: "XXXXXX-XXXXXXXXXX"
           question: "{{ query }}"
-          option: "SpokenAnswer"   
-          #translate: "de"
-          file_template: "templates/answers.j2"
-          
-  - name: "answer-of-everything-full"
-    signals: 
-      - order: "ask alpha_full {{ query }}"
-    neurons:
-      - answer_of_everything:
-          key: "XXXXXX-XXXXXXXXXX"
-          question: "{{ query }}"
-          option: "FullResults"   
-          #translate: "de"
-          file_template: "templates/answers.j2"
-          
-  - name: "answer-of-everything-all"
-    signals: 
-      - order: "ask alpha_all {{ query }}"
-    neurons:
-      - answer_of_everything:
-          key: "XXXXXX-XXXXXXXXXX"
-          question: "{{ query }}"
-          option: "All"   
-          #translate: "de"
-          file_template: "templates/answers.j2"          
-   
-  - name: "answer-of-everything-tell-more"
-    signals: 
-      - order: "tell me more"
-    neurons:
-      - answer_of_everything:
-          tell_me_more: True
-          file_template: "templates/answers.j2"    
+          language: "de"
+          engines:  
+                wolfram_alpha: 
+                    key: "XXXX-XXXXXXXX"
+                google:
+                duckduckgo:
+          file_template: "templates/answer_of_everything.j2" 
+
 ```
 
-## File template
+
+
+## Example file template
 ```
-{% if AnswerFound %} 
-    According to alpha: {{ AnswerFound }}
+{% if wolfram_answer %} 
+   {{ wolfram_answer }}
+{% elif google_answer %}
+    {{ google_answer }}
+{% elif duckduckgo_answer %}
+    {{ duckduckgo_answer }}
 {% elif NoAnswerFound %} 
-    Didn’t found an answer to your question {{ NoAnswerFound }} 
+    I'm Sorry I have no Answer to the question {{ NoAnswerFound }}
+{% endif %}
 
-{% elif TellMeMore %} 
-    {{ TellMeMore }}
-{% elif NothingMoreToTell %} 
-    Could not find more information
-
-{% elif ShortAnswer %} 
-    Short answer: {{ ShortAnswer }}
-{% elif SpokenAnswer %} 
-    Spoken answer: {{ SpokenAnswer }}
-{% elif FullResults %} 
-    Full results: {{ FullResults }}
-{% elif FullResultsMore %} 
-    full results and more: {{ FullResultsMore }} 
-    
-{% elif NoShortAnswer %} 
-    no short answer found
-{% elif NoSpokenAnswer %} 
-    No spoken answer found
-{% elif NoFullResults %} 
-    No full results found
-{% elif NoFullResultsMore %} 
-    Nothing more for full results
  ```
-
-## To Do & Ideas
-- Find out which wolframalpha api we use as default to support a high quality of answer.
-- Making it modular to use different engines e.g. duckduckgo, google.
-- Coding a wolframalpha engine (Idea:  FullResults only and spoken/short answer in the main code as default)
