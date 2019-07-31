@@ -2,122 +2,153 @@
 from kalliope.core.NeuronModule import NeuronModule, MissingParameterException
 from kalliope import Utils
 from googletrans import Translator
-import requests
+
+import re
+import sys
+import os 
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from engines.WolframAlpha.wolfram_alpha import WolframAlpha
+from engines.GoogleAnswers.google_answer import GoogleAnswer
+from engines.DuckDuckGo.duckduckgo import DuckDuckGo
 
 class Answer_of_everything(NeuronModule):
     def __init__(self, **kwargs):
         super(Answer_of_everything, self).__init__(**kwargs)
         # the args from the neuron configuration
         self.question = kwargs.get('question', None)
-        self.option = kwargs.get('option', 'SpokenAnswer')
-        self.translate = kwargs.get('translate', None)
-        self.key = kwargs.get('key', None)
-        
-        answer = None
-        self.SR_ROOT = 'https://api.wolframalpha.com/v2/spoken'
-        self.SA_ROOT = 'http://api.wolframalpha.com/v2/result'
-        self.translator = Translator()
-        
+        self.engines = kwargs.get('engines', None)
+        self.language = kwargs.get('language', None)
+
         if self._is_parameters_ok():
-            question = self.question
+            sorted_engines = self.engines
+            answer = None
+            result = None
 
-            if self.translate:
-                question = self.translate_question(question)
+            if sys.version_info[0] < 3: #Python 3 preserves the order of a dictionary so no need to priority
+                if len(sorted_engines) > 1:
+                    try:
+                        sorted_engines = sorted(self.engines, key=lambda x: (self.engines[x]['priority']))
+                    except (KeyError, TypeError):
+                        raise MissingParameterException("You have set more than one engine, please set the priority parameter for each engine to prioritize the search.")
+                   
+            for engine in sorted_engines:
+                if engine == "wolfram_alpha":
+                    result = self.wa_engine(self.question)
+                    if result:
+                        answer = ({"wolfram_answer": result})
+                        break
+                if engine == "google":
+                    result = self.google_engine(self.question)
+                    if result:
+                        answer = ({"google_answer": result})
+                        break
+                if engine == "duckduckgo":
+                    result = self.ddg_engine(self.question)
+                    if result:
+                        answer = ({"duckduckgo_answer": result})
+                        break
 
-            if self.option == "SpokenAnswer":
-                answer = self.spoken_answer(question)
-                # Sometimes there is no spoken answer, so we try to get the short answer
-                if answer is None:
-                    answer = self.short_answer(question)  
-
-            if self.option == "ShortAnswer":
-                answer = self.short_answer(question) 
-            
-            # There are some answers, which return irrelevant informations, those we will remove from the answer
-            if answer:
-                answer = self.check_for_spliting_result(answer)
-
-            if self.translate and answer is not None:
-                answer = self.translate_answer(answer)
-
-            answer = ({('AnswerFound' if answer else 'NoAnswerFound') : (answer if answer else self.question)})
+            if not answer:
+                answer = ({"NoAnswerFound": self.question})
             self.say(answer)
 
+    def google_engine(self, question):
+        result = None
+        g_a = GoogleAnswer(question)
+        result = g_a.get_answer()
+        if result:
+            Utils.print_info('Found answer on Google')
+            result = self.format_result(result[0])  
+        else:
+            Utils.print_info('No answer found on Google')
+        return result
 
-    def translate_question(self, text):
-        text = self.translator.translate(text, dest='en', src=self.translate).text
-        Utils.print_info('Translated question to: %s' % text)
+    def wa_engine(self, question):
+        result = None
+        try:
+            key =  self.engines['wolfram_alpha']['key']
+        except KeyError:
+            raise MissingParameterException("API key is missing or is incorrect. Please set a valid API key.")  
+
+        try:
+            option = self.engines['wolfram_alpha']['option']
+            if option not in ["spoken_answer", "short_answer"]:
+                raise MissingParameterException("%s is not a valid option. Valid options are short_answer or spoken_answer." % option)  
+        except KeyError:
+            option = "spoken_answer"
+
+        try:
+            unit = self.engines['wolfram_alpha']['unit']
+            if unit.lower() not in ["metric", "imperial"]:
+                raise MissingParameterException("%s is not a valid unit. Valid units are metric or imperial." % unit)  
+        except KeyError:
+            unit = "metric"
+
+        if self.language:
+            question = self.translate_question(question, self.language)
+
+        w_a = WolframAlpha(question, key, unit.lower())
+        if option == "spoken_answer":
+            result = w_a.spoken_answer()
+            if result is None:
+                result = w_a.short_answer()  
+        
+        if option == "short_answer":
+            result = w_a.short_answer()       
+        
+        if result:
+            if self.language:
+                result = self.translate_answer(result, self.language)
+            result = self.format_result(result)
+            Utils.print_info('Found answer on Wolfram Alpha') 
+        else:
+            Utils.print_info('No answer found on Wolfram Alpha')
+
+        return result
+
+    def ddg_engine(self, question):
+        result = None
+        if self.language:
+            question = self.translate_question(question, self.language)
+
+        ddg = DuckDuckGo(question)
+        result = ddg.get_answer()
+        if result:
+            if self.language:
+                result = self.translate_answer(result, self.language)        
+            result = self.format_result(result)
+            Utils.print_info('Found answer on DuckDuckGo') 
+        else:
+            Utils.print_info('No answer found on DuckDuckGo')
+
+        return result
+
+    def translate_question(self, text, language):
+        text = Translator().translate(text, dest='en', src=language).text
         return text
     
-    def translate_answer(self, text):
-        text = self.translator.translate(text, dest=self.translate, src='en').text
-        Utils.print_info('Translated answer to: %s' % text)
+    def translate_answer(self, text, language):
+        text = Translator().translate(text, dest=language, src='en').text
         return text    
-    
-    def spoken_answer(self, text):
-        """
-        Calls the API and returns a string of text
-                                
-        :param key: a developer key. Defaults to key given when the waAPI class was initialized.
-        
-        :query examples:
-            i = 'How many megabytes are in a gigabyte'			        
-        """
-        url = '%s?i=%s&appid=%s' % (
-        self.SR_ROOT, text.encode('utf8').lower(), self.key
-        )
-        r = requests.get(url)			
-        if r.text == 'No spoken result available' or r.text == 'Wolfram Alpha did not understand your input':
-            Utils.print_info('No spoken answer found for %s' % text) 
-            result = None
-        else:
-            Utils.print_info('Spoken answer found: %s' % r.text)
-            result = r.text
 
-        return result 
-
-                        
-    def short_answer(self, text):
-        """
-        Calls the API and returns a string of text
-                                
-        :param key: a developer key. Defaults to key given when the waAPI class was initialized.
-        
-        :query examples:
-            i = 'How many megabytes are in a gigabyte'			        
-        """
-        url = '%s?i=%s&appid=%s' % (
-            self.SA_ROOT, text.encode('utf8').lower(), self.key
-            )
-        r = requests.get(url)
-        
-        if r.text == 'No short answer available' or r.text == 'Wolfram|Alpha did not understand your input': 
-            Utils.print_info('No Short answer found for: %s' % text)
-            result = None
-        else:
-            Utils.print_info('Short answer found: %s' % r.text)
-            result = r.text
-        return result    
-     
-    def check_for_spliting_result(self, result):
-        # If we ask for a time, we also get the timezones and day e.g The answer is 12:55:45 P.M. EEST; Thursday, July 5, 2018 so we remove everything except the time
-        if 'P.M.' in result:
-            result = result.split('P.M.', 1)[0] + 'P.M.'
-        if 'A.M.' in result:
-            result = result.split('A.M.', 1)[0] + 'A.M.'     
-        
+    def format_result(self, result):
+        result = str(result)
+        result = re.sub(r'\([^)]*\)|/[^/]*/', '', result)
+        result = re.sub(r" \s+", r" ", result)
         return result
-        
+
     def _is_parameters_ok(self):
         """
         Check if received parameters are ok to perform operations in the neuron
         :return: true if parameters are ok, raise an exception otherwise
 
         .. raises:: MissingParameterException
-        """
-        if self.key is None:
-            raise MissingParameterException("You need to set a developer key") 
-        if self.question is None or self.question is  "":
-            raise MissingParameterException("Question is None, please try again")     
-
+        """ 
+        if not self.question:
+            raise MissingParameterException("Question parameter is missing.")
+        if self.engines is None:
+            raise MissingParameterException("Engines parameter is missing. Please define the search engine you want to use.")
+        
         return True

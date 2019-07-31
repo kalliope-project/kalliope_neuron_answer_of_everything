@@ -1,8 +1,7 @@
-# kalliope_neuron_answer_of_everything
-Get an answer to a question from multiple backend engine like Google, wolframalpha or DuckDuckGo
+# answer-of-everything
 
 ## Synopsis
-Ask a generell question. At the moment only Wolfram Alpha is supported.
+A search engines to ask all kind of questions, where you can set the priority of the different search engines. If the first engine does not find an answer, it will lookup the next engine.
 
 ## Installation
 ```bash
@@ -11,52 +10,98 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
 
 ## Example
 - Kalliope --> I have a question how tall is the eiffel tower 
-- Kalliope --> I have a question what time is it in Tokio
-- Kalliope --> I have a question when is albert einstein born
-- Kalliope --> I have a question how far away is the moon from earth
-
-## Options
-| parameter | required | default | choices & comments |
-|-----------|----------|---------|--------------------|
-| question  | yes      |         |                    |
-| key       | yes      |         | Check [here](https://products.wolframalpha.com/api/) to get a developer key |
-| option    | no       | SpokenAnswer | SpokenAnswer, ShortAnswer |
-| translate | no       | English | Wolfram Alpha is only available in english, so we need to translate the answer and question with the help of google translator, e.g. "fr", "de", [look here for more](https://cloud.google.com/translate/docs/languages) |
+- Kalliope --> Can you answer me what time is it in Tokio
+- Kalliope --> Tell me when albert einstein is born
+- Kalliope --> Can you tell me what day was March 31, 1989
 
 
-## Synpase
+## Main options
+| parameter        | required | comments                                     |
+|------------------|----------|----------------------------------------------|
+| question         | yes      |                                              |
+| engines          | yes      | Define the search engines you want to use    |
+| translate        | no       | Wolfram Alpha and Duckduckgo only support English, [here](https://py-googletrans.readthedocs.io/en/latest/#googletrans-languages) you can find supported languages |
+
+## Wolfram alpha engine
+| parameter        | required | comments                                     |
+|------------------|----------|----------------------------------------------|
+| wolfram_alpha    | yes      |                                              |
+| key              | yes      | https://products.wolframalpha.com/api/       |
+| unit             | no       | You can choose between metric (default) or imperial |
+| priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
+| option           | no       | You can chose between spoken_answer (default) or short_answer. With spoken_answer you get a full sentence back if available, otherwise it returns a short_answer| 
+
+## Google engine
+| parameter        | required | comments                                     |
+|------------------|----------|----------------------------------------------|
+| google           | yes      |                                              |
+| priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
+
+## Duckduckgo engine
+| parameter        | required | comments                                     |
+|------------------|----------|----------------------------------------------|
+| duckduckgo       | yes      |                                              |
+| priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
+
+## Returned values
+| name             | description                           | 
+|------------------|---------------------------------------|
+| wolfram_answer   | Answer found on wolfram alpha         |
+| google_answer    | Answer found on google                |
+| duckduckgo_answer| Answer found on duckduckgo            |
+| NoAnswerFound    | No Answer found, returns the question |
+
+
+## Synapse example for python 2
 ```
-  - name: "answer-of-everything-spoken"
+  
+  - name: "answer-of-everything"
     signals: 
-      - order: "I have a question {{ query }}"
+      - order: "answer me the question {{ query }}"
     neurons:
       - answer_of_everything:
-          key: "XXXXXX-XXXXXXXXXX"
           question: "{{ query }}"
-          translate: "de"
-          file_template: "templates/answers.j2"
+          language: "de"
+          engines:  
+                wolfram_alpha: 
+                    key: "XXXX-XXXXXXXX"
+                    priority: 1
+                google:
+                    priority: 2
+                duckduckgo:
+                    priority: 3
+          file_template: "templates/answer_of_everything.j2" 
 
-  - name: "answer-of-everything-short"
+```
+## Synapse example for python 3
+```
+  
+  - name: "answer-of-everything"
     signals: 
-      - order: "I have a question {{ query }}"
+      - order: "answer me the question {{ query }}"
     neurons:
       - answer_of_everything:
-          key: "XXXXXX-XXXXXXXXXX"
           question: "{{ query }}"
-          option: "ShortAnswer"
-          file_template: "templates/answers.j2"
+          language: "de"
+          engines:  
+                wolfram_alpha: 
+                    key: "XXXX-XXXXXXXX"
+                google:
+                duckduckgo:
+          file_template: "templates/answer_of_everything.j2" 
 
 ```
 
-## File template
+## Example file template
 ```
-{% if AnswerFound %} 
-    According to alpha: {{ AnswerFound }}
+{% if wolfram_answer %} 
+   {{ wolfram_answer }}
+{% elif google_answer %}
+    {{ google_answer }}
+{% elif duckduckgo_answer %}
+    {{ duckduckgo_answer }}
 {% elif NoAnswerFound %} 
-    Didn’t found an answer to your question {{ NoAnswerFound }} 
+    I'm Sorry I have no Answer to the question {{ NoAnswerFound }}
 {% endif %}
 
- ```
-
-## Todos
-Support different search engines, for example DuckDuckGo or google
+ ``
