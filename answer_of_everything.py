@@ -134,7 +134,7 @@ class Answer_of_everything(NeuronModule):
         return text    
 
     def format_result(self, result):
-        result = str(result)
+        result = result.encode('utf-8')
         result = re.sub(r'\([^)]*\)|/[^/]*/', '', result)
         result = re.sub(r" \s+", r" ", result)
         return result
