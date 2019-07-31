@@ -3,7 +3,6 @@
 ## Synopsis
 A search engines to ask all kind of questions, where you can set the priority of the different search engines. If the first engine does not find an answer, it will lookup the next engine.
 
-
 ## Installation
 ```bash
 kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_answer_of_everything.git
@@ -31,7 +30,6 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
 | unit             | no       | You can choose between metric (default) or imperial |
 | priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
 | option           | no       | You can chose between spoken_answer (default) or short_answer. With spoken_answer you get a full sentence back if available, otherwise it returns a short_answer| 
-
 
 ## Google engine
 | parameter        | required | comments                                     |
@@ -94,8 +92,6 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
 
 ```
 
-
-
 ## Example file template
 ```
 {% if wolfram_answer %} 
@@ -108,4 +104,4 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
     I'm Sorry I have no Answer to the question {{ NoAnswerFound }}
 {% endif %}
 
- ```
+ ``

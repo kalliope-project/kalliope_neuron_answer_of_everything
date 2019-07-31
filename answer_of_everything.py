@@ -150,5 +150,5 @@ class Answer_of_everything(NeuronModule):
             raise MissingParameterException("Question parameter is missing.")
         if self.engines is None:
             raise MissingParameterException("Engines parameter is missing. Please define the search engine you want to use.")
-            
+        
         return True
