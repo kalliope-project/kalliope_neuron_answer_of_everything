@@ -4,8 +4,7 @@
   connection: local
   become: true
   tasks:
-    - name: "Install pip dependencies"
+    - name: "google translate"
       pip:
-        name: wolframalpha
-      pip:
-        name: googletranslate
+        name: googletrans
+        
