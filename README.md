@@ -1,7 +1,7 @@
 # answer-of-everything
 
 ## Synopsis
-A search engines to ask all kind of questions, where you can set the priority of the different search engines. If the first engine does not find an answer, it will lookup the next engine.
+A search engine to ask all kind of questions, where you can set the priority of the different search engines. If the first engine does not find an answer, it will lookup the next engine.
 
 ## Installation
 ```bash
@@ -28,20 +28,20 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
 | wolfram_alpha    | yes      |                                              |
 | key              | yes      | https://products.wolframalpha.com/api/       |
 | unit             | no       | You can choose between metric (default) or imperial |
-| priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
+| priority         | no       | If you use more then one search engine, you need to prioritize them. It’s searches in the order you set the priority | 
 | option           | no       | You can chose between spoken_answer (default) or short_answer. With spoken_answer you get a full sentence back if available, otherwise it returns a short_answer| 
 
 ## Google engine
 | parameter        | required | comments                                     |
 |------------------|----------|----------------------------------------------|
 | google           | yes      |                                              |
-| priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
+| priority         | no       | If you use more then one search engine, you need to prioritize them. It’s searches in the order you set the priority | 
 
 ## Duckduckgo engine
 | parameter        | required | comments                                     |
 |------------------|----------|----------------------------------------------|
 | duckduckgo       | yes      |                                              |
-| priority         | no       | Its only required if you use python2, in python3 it searches in the order you define the engines in your synapses | 
+| priority         | no       | If you use more then one search engine, you need to prioritize them. It’s searches in the order you set the priority | 
 
 ## Returned values
 | name             | description                           | 
@@ -52,7 +52,7 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
 | NoAnswerFound    | No Answer found, returns the question |
 
 
-## Synapse example for python 2
+## Synapse example for all three engines
 ```
   
   - name: "answer-of-everything"
@@ -73,12 +73,12 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
           file_template: "templates/answer_of_everything.j2" 
 
 ```
-## Synapse example for python 3
+
+## Synapse example for single engine
 ```
-  
   - name: "answer-of-everything"
     signals: 
-      - order: "answer me the question {{ query }}"
+      - order: "ask wolfram {{ query }}"
     neurons:
       - answer_of_everything:
           question: "{{ query }}"
@@ -86,11 +86,10 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
           engines:  
                 wolfram_alpha: 
                     key: "XXXX-XXXXXXXX"
-                google:
-                duckduckgo:
           file_template: "templates/answer_of_everything.j2" 
 
 ```
+
 
 ## Example file template
 ```
