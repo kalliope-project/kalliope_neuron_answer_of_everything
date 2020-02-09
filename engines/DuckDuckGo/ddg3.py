@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
-import sys
-if sys.version_info[0] >= 3:
-    from urllib.parse import urlencode
-else:
-     from urllib import urlencode
-
 
 import requests
+from urllib.parse import urlencode
 from xml.etree import ElementTree
 
 __version__ = '0.6.6'
