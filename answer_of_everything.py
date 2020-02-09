@@ -25,15 +25,8 @@ class Answer_of_everything(NeuronModule):
             sorted_engines = self.engines
             answer = None
             result = None
-
-            #if sys.version_info[0] < 3: #Python 3 preserves the order of a dictionary so no need to priority
-            if len(sorted_engines) > 1:
-                try:
-                    sorted_engines = sorted(self.engines, key=lambda x: (self.engines[x]['priority']))
-                except (KeyError, TypeError):
-                    raise MissingParameterException("You have set more than one engine, please set the priority parameter for each engine to prioritize the search.")
-
-            for engine in sorted_engines:
+            
+            for engine in sorted_engines: #Python 3 preserves the order of a dictionary
                 if engine == "wolfram_alpha":
                     result = self.wa_engine(self.question)
                     if result:
@@ -134,7 +127,6 @@ class Answer_of_everything(NeuronModule):
         return text    
 
     def format_result(self, result):
-        result = result.encode('utf-8')
         result = re.sub(r'\([^)]*\)|/[^/]*/', '', result)
         result = re.sub(r" \s+", r" ", result)
         return result
