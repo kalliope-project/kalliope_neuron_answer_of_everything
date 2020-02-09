@@ -28,20 +28,17 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
 | wolfram_alpha    | yes      |                                              |
 | key              | yes      | https://products.wolframalpha.com/api/       |
 | unit             | no       | You can choose between metric (default) or imperial |
-| priority         | no       | If you use more then one search engine, you need to prioritize them. It’s searches in the order you set the priority | 
 | option           | no       | You can chose between spoken_answer (default) or short_answer. With spoken_answer you get a full sentence back if available, otherwise it returns a short_answer| 
 
 ## Google engine
 | parameter        | required | comments                                     |
 |------------------|----------|----------------------------------------------|
 | google           | yes      |                                              |
-| priority         | no       | If you use more then one search engine, you need to prioritize them. It’s searches in the order you set the priority | 
 
 ## Duckduckgo engine
 | parameter        | required | comments                                     |
 |------------------|----------|----------------------------------------------|
 | duckduckgo       | yes      |                                              |
-| priority         | no       | If you use more then one search engine, you need to prioritize them. It’s searches in the order you set the priority | 
 
 ## Returned values
 | name             | description                           | 
@@ -52,7 +49,7 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
 | NoAnswerFound    | No Answer found, returns the question |
 
 
-## Synapse example for all three engines
+## Synapse example for all three engines (The order you define the engine is the order which Kalliope will try to get the answer, in this example it will try to get a answer first from wolfram_alpha then google and last duckduckgo)
 ```
   
   - name: "answer-of-everything"
@@ -65,11 +62,8 @@ kalliope install --git-url https://github.com/kalliope-project/kalliope_neuron_a
           engines:  
                 wolfram_alpha: 
                     key: "XXXX-XXXXXXXX"
-                    priority: 1
                 google:
-                    priority: 2
                 duckduckgo:
-                    priority: 3
           file_template: "templates/answer_of_everything.j2" 
 
 ```
