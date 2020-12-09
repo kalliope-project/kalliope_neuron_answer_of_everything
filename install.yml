@@ -4,12 +4,9 @@
   connection: local
   become: true
   tasks:
-    - name: "google translate"
+    - name: "Dependencies"
       pip:
-        name: google-trans-new
-        executable: pip3
-        
-    - name: "BS4 parser library"
-      pip:
-        name: lxml
+        name: 
+          - google-trans-new
+          - lxml
         executable: pip3
