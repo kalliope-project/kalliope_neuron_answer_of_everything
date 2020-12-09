@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 from kalliope.core.NeuronModule import NeuronModule, MissingParameterException
 from kalliope import Utils
-from googletrans import Translator
+from google_trans_new import google_translator  
 
 import re
 import sys
@@ -19,7 +19,10 @@ class Answer_of_everything(NeuronModule):
         # the args from the neuron configuration
         self.question = kwargs.get('question', None)
         self.engines = kwargs.get('engines', None)
+        
         self.language = kwargs.get('language', None)
+        if self.language:
+            self.translator = google_translator()
 
         if self._is_parameters_ok():
             sorted_engines = self.engines
@@ -45,6 +48,7 @@ class Answer_of_everything(NeuronModule):
 
             if not answer:
                 answer = ({"NoAnswerFound": self.question})
+
             self.say(answer)
 
     def google_engine(self, question):
@@ -79,8 +83,7 @@ class Answer_of_everything(NeuronModule):
         except KeyError:
             unit = "metric"
 
-        if self.language:
-            question = self.translate_question(question, self.language)
+        question = self.translate_text(question, is_question=True)
 
         w_a = WolframAlpha(question, key, unit.lower())
         if option == "spoken_answer":
@@ -92,9 +95,7 @@ class Answer_of_everything(NeuronModule):
             result = w_a.short_answer()       
         
         if result:
-            if self.language:
-                result = self.translate_answer(result, self.language)
-            result = self.format_result(result)
+            result = self.format_result(self.translate_text(result))
             Utils.print_info('Found answer on Wolfram Alpha') 
         else:
             Utils.print_info('No answer found on Wolfram Alpha')
@@ -103,33 +104,30 @@ class Answer_of_everything(NeuronModule):
 
     def ddg_engine(self, question):
         result = None
-        if self.language:
-            question = self.translate_question(question, self.language)
 
-        ddg = DuckDuckGo(question)
+        ddg = DuckDuckGo(self.translate_text(question, is_question=True))
         result = ddg.get_answer()
         if result:
-            if self.language:
-                result = self.translate_answer(result, self.language)        
-            result = self.format_result(result)
+            result = self.format_result(self.translate_text(result))
             Utils.print_info('Found answer on DuckDuckGo') 
         else:
             Utils.print_info('No answer found on DuckDuckGo')
 
         return result
 
-    def translate_question(self, text, language):
-        text = Translator().translate(text, dest='en', src=language).text
-        return text
-    
-    def translate_answer(self, text, language):
-        text = Translator().translate(text, dest=language, src='en').text
-        return text    
-
     def format_result(self, result):
         result = re.sub(r'\([^)]*\)|/[^/]*/', '', result)
         result = re.sub(r" \s+", r" ", result)
         return result
+
+    def translate_text(self, text, is_question=False):
+        if self.language is None:
+            return text 
+
+        if is_question:
+            return self.translator.translate(text, lang_src=self.language, lang_tgt='en')
+
+        return self.translator.translate(text, lang_tgt=self.language, lang_src='en')
 
     def _is_parameters_ok(self):
         """
